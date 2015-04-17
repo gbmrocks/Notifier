@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.support.v7.app.ActionBarActivity;
 import android.telephony.PhoneStateListener;
@@ -19,26 +18,22 @@ import android.widget.Toast;
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 
-import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 
 public class NotifierActivity extends ActionBarActivity {
-    public static String number;
-    public static boolean ring = false;
-    public static boolean callReceived = false;
-
     private static final String username = "miscallnotifier@gmail.com";
     private static final String password = "ctl1CRNotifier";
     private static final String recipient = "neog.pradyumna@gmail.com";
-
+    public static String number;
+    public static boolean ring = false;
+    public static boolean callReceived = false;
     private static String subject;
     private static String body;
 
@@ -65,7 +60,7 @@ public class NotifierActivity extends ActionBarActivity {
                 }
 
                 if (state == TelephonyManager.CALL_STATE_IDLE){
-                    if (ring == true && callReceived == false){
+                    if (ring && !callReceived) {
                         String contactName = getContactName(getApplicationContext(), number);
                         subject = "Miscall Alert";
                         if(contactName != null) {
@@ -117,87 +112,6 @@ public class NotifierActivity extends ActionBarActivity {
 
         return super.onOptionsItemSelected(item);
     }
-/*
-    //Creating Session
-    private Session createSessionObject(){
-        Properties props = new Properties();
-        props.put("mail.smtp.auth","true");
-        props.put("mail.smtp.starttls.enable","true");
-        props.put("mail.smtp.host","smtp.gmail.com");
-        props.put("mail.smtp.port","587");
-
-        return Session.getInstance(props,new Authenticator() {
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(username, password);
-            }
-        });
-    }
-
-    //Creating the Message
-    private Message createMessage(String toList, String subject, String body, Session session) throws MessagingException, UnsupportedEncodingException {
-        Message message = new MimeMessage(session);
-        message.setFrom(new InternetAddress("notifier@prady.com", "Notifier"));
-        message.addRecipient(Message.RecipientType.TO, new InternetAddress(toList,toList));
-        message.setSubject(subject);
-        message.setText(body);
-        return message;
-    }
-
-    //Sending the Email
-    private void sendEmail(String email, String subject, String body){
-        *//*Session session = createSessionObject();
-        try{
-            Message message = createMessage(email, subject, body, session);
-            new SendMailTask().execute(message);
-        }catch (AddressException e){
-            e.printStackTrace();
-        }catch(MessagingException e){
-            e.printStackTrace();
-        }catch (UnsupportedEncodingException e){
-            e.printStackTrace();
-        }*//*
-        try {
-            new SendMailTask().execute();
-//            GMailSender sender = new GMailSender(username, password);
-//            sender.sendMail(subject,body,username,email);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-    }
-
-    //Creating Async Class to send email
-    private class SendMailTask extends AsyncTask<Message, Void, Void> {
-        private ProgressDialog progressDialog;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            progressDialog = ProgressDialog.show(WelcomeActivity.this, "Please wait", "Sending mail", true, false);
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            progressDialog.dismiss();
-        }
-
-        @Override
-        protected Void doInBackground(Message... messages) {
-            try {
-//                Transport.send(messages[0]);
-                Toast.makeText(getApplicationContext(), "Sending Email Notification", Toast.LENGTH_LONG).show();
-                GMailSender sender = new GMailSender(username, password);
-                sender.sendMail(subject,body,username,recipient);
-            } catch (MessagingException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }*/
 
     private void sendMail(String email, String subject, String messageBody) {
         Session session = createSessionObject();
@@ -205,11 +119,7 @@ public class NotifierActivity extends ActionBarActivity {
         try {
             Message message = createMessage(email, subject, messageBody, session);
             new SendMailTask().execute(message);
-        } catch (AddressException e) {
-            e.printStackTrace();
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
+        } catch (MessagingException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
     }
@@ -239,6 +149,24 @@ public class NotifierActivity extends ActionBarActivity {
         });
     }
 
+    //Retrieve Contact Name
+    private String getContactName(Context context, String phoneNumber) {
+        String contactName = null;
+        ContentResolver cr = context.getContentResolver();
+        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber));
+        Cursor cursor = cr.query(uri, new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
+        if (cursor == null) {
+            return null;
+        }
+        if (cursor.moveToFirst()) {
+            contactName = cursor.getString(cursor.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME));
+        }
+        if (!cursor.isClosed()) {
+            cursor.close();
+        }
+        return contactName;
+    }
+
     private class SendMailTask extends AsyncTask<Message, Void, Void> {
         private ProgressDialog progressDialog;
 
@@ -265,24 +193,6 @@ public class NotifierActivity extends ActionBarActivity {
             }
             return null;
         }
-    }
-
-    //Retrieve Contact Name
-    private String getContactName(Context context, String phoneNumber){
-        String contactName = null;
-        ContentResolver cr = context.getContentResolver();
-        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,Uri.encode(phoneNumber));
-        Cursor cursor = cr.query(uri, new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME},null,null,null);
-        if(cursor == null){
-            return null;
-        }
-        if(cursor.moveToFirst()){
-            contactName = cursor.getString(cursor.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME));
-        }
-        if(cursor != null && !cursor.isClosed()){
-            cursor.close();
-        }
-        return contactName;
     }
     /*private static boolean ring = false;
     private static boolean callReceived = false;
