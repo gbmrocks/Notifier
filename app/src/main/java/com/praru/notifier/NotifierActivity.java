@@ -3,6 +3,7 @@ package com.praru.notifier;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -13,6 +14,8 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.UnsupportedEncodingException;
@@ -28,22 +31,33 @@ import javax.mail.internet.MimeMessage;
 
 
 public class NotifierActivity extends ActionBarActivity {
+    public static final String userPreferences = "UserPrefs";
     private static final String username = "miscallnotifier@gmail.com";
     private static final String password = "ctl1CRNotifier";
-    private static final String recipient = "neog.pradyumna@gmail.com";
     public static String number;
     public static boolean ring = false;
     public static boolean callReceived = false;
+    public static String emailID = "emailIDKey";
+    private static String recipient;
     private static String subject;
     private static String body;
 
+    SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifier);
 
+        sharedPreferences = getSharedPreferences(userPreferences, Context.MODE_PRIVATE);
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        if (sharedPreferences.contains(emailID)) {
+            recipient = sharedPreferences.getString(emailID, "");
+            EditText emailInput = (EditText) findViewById(R.id.emailID);
+            emailInput.setText(recipient);
+        } else {
+            Toast.makeText(getApplicationContext(), "Please update the recipient email ID", Toast.LENGTH_LONG).show();
+        }
         PhoneStateListener phoneStateListener = new PhoneStateListener(){
             @Override
             public void onCallStateChanged(int state, String incomingNumber) {
@@ -63,15 +77,20 @@ public class NotifierActivity extends ActionBarActivity {
                     if (ring && !callReceived) {
                         String contactName = getContactName(getApplicationContext(), number);
                         subject = "Miscall Alert";
+
                         if(contactName != null) {
                             Toast.makeText(getApplicationContext(), "Miscall from " + contactName + "<" + number + ">", Toast.LENGTH_LONG).show();
                             body = "You have a new missed call from " + contactName + "<" + number + ">";
-                            sendMail(recipient, subject, body);
                         }else{
                             Toast.makeText(getApplicationContext(), "Miscall from Unknown Number <"  + number + ">", Toast.LENGTH_LONG).show();
                             body = "You have a new missed call from an unknown number " + number;
-                            sendMail(recipient, subject, body);
                         }
+
+                        if (recipient != null && !recipient.equalsIgnoreCase(""))
+                            sendMail(recipient, subject, body);
+                        else
+                            Toast.makeText(getApplicationContext(), "Please update the recipient email ID", Toast.LENGTH_LONG).show();
+
                         ring = false;
                     }else {
                         Toast.makeText(getApplicationContext(), "Phone is idle", Toast.LENGTH_LONG).show();
@@ -167,6 +186,17 @@ public class NotifierActivity extends ActionBarActivity {
         return contactName;
     }
 
+    //Method to save and update user data
+    public void saveData(View view) {
+        EditText editEmailID = (EditText) findViewById(R.id.emailID);
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(emailID, editEmailID.getText().toString());
+        editor.apply();
+
+        Toast.makeText(getApplicationContext(), "Data successfully updated", Toast.LENGTH_LONG).show();
+    }
+
     private class SendMailTask extends AsyncTask<Message, Void, Void> {
         private ProgressDialog progressDialog;
 
@@ -186,14 +216,15 @@ public class NotifierActivity extends ActionBarActivity {
         protected Void doInBackground(Message... messages) {
             try {
                 Transport.send(messages[0]);
-                System.out.println("Voila");
+//                System.out.println("Voila");
             } catch (MessagingException e) {
-                System.out.println("Tai Tai Fish");
+//                System.out.println("Tai Tai Fish");
                 e.printStackTrace();
             }
             return null;
         }
     }
+
     /*private static boolean ring = false;
     private static boolean callReceived = false;
     private static String number;
