@@ -1,16 +1,20 @@
 package com.praru.notifier;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.Telephony;
 import android.support.v7.app.ActionBarActivity;
 import android.telephony.PhoneStateListener;
+import android.telephony.SmsMessage;
 import android.telephony.TelephonyManager;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -48,7 +52,7 @@ public class NotifierActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifier);
-
+        new SMSBroadcastReceiver();
         sharedPreferences = getSharedPreferences(userPreferences, Context.MODE_PRIVATE);
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         if (sharedPreferences.contains(emailID)) {
@@ -190,13 +194,16 @@ public class NotifierActivity extends ActionBarActivity {
     public void saveData(View view) {
         EditText editEmailID = (EditText) findViewById(R.id.emailID);
 
+
         SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(emailID);
         editor.putString(emailID, editEmailID.getText().toString());
-        editor.apply();
+        editor.commit();
 
         Toast.makeText(getApplicationContext(), "Data successfully updated", Toast.LENGTH_LONG).show();
     }
 
+    //Async Send Email Task
     private class SendMailTask extends AsyncTask<Message, Void, Void> {
         private ProgressDialog progressDialog;
 
@@ -222,6 +229,40 @@ public class NotifierActivity extends ActionBarActivity {
                 e.printStackTrace();
             }
             return null;
+        }
+
+
+    }
+
+    public class SMSBroadcastReceiver extends BroadcastReceiver {
+
+        private static final String SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
+        private static final String TAG = "SMSBroadcastReceiver";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Telephony.Sms.Intents.SMS_RECEIVED_ACTION.equals(intent.getAction())) {
+                for (SmsMessage smsMessage : Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
+                    String messageBody = smsMessage.getMessageBody();
+                }
+            }
+        /*
+            Log.i(TAG, "Intent Received " + intent.getAction());
+            if (intent.getAction().equals(SMS_RECEIVED)){
+                Bundle bundle = intent.getExtras();
+                if(bundle != null){
+                    Object[] pdus = (Object[]) bundle.get("pdus");
+                    final SmsMessage[] messages = new SmsMessage[pdus.length];
+                    for (int i = 0; i < pdus.length; i++){
+                        messages[i] = SmsMessage.createFromPdu((byte[])pdus[i]);
+                    }
+                    if (messages.length > -1) {
+                        subject = "SMS Alert";
+                        body = messages[0].getMessageBody();
+                        sendMail(emailID, subject, body);
+                    }
+                }
+            }*/
         }
     }
 
