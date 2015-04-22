@@ -1,10 +1,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
+    <!--<TextView
         android:text="@string/emailSend"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -14,19 +13,37 @@
     <TextView
         android:text="@string/emailSetting"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content" />-->
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="250dp">
+
+        <Switch
+            android:id="@+id/onOffSwitch"
+            android:layout_width="240dp"
+            android:layout_height="87dp"
+            android:layout_gravity="center"
+            android:text="@string/monitoring" />
+
+    </FrameLayout>
 
     <EditText
         android:id="@+id/emailID"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:ems="10"
         android:hint="@string/email"
-        android:inputType="textEmailAddress"/>
+        android:inputType="textEmailAddress" />
 
     <Button
-        android:text="@string/save"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="saveData"/>
+        android:layout_gravity="center_horizontal"
+        android:onClick="saveData"
+        android:text="@string/save" />
+
 
 </LinearLayout>

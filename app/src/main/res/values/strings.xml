@@ -1,9 +1,7 @@
 <resources>
     <string name="app_name">Notifier</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_email">EmailActivity</string>
-    <string name="emailSend">This app will read your phone status and send out notification to the specified email id -</string>
-    <string name="emailSetting">Please enter the email ID in which you want to receive the email notification</string>
     <string name="email">Email ID</string>
     <string name="save">Save Details</string>
+    <string name="monitoring">MONITORING</string>
 </resources>
