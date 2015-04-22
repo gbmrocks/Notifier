@@ -80,12 +80,24 @@ public class NotifierActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        switch (item.getItemId()) {
+            case R.id.about:
+                startActivity(new Intent(this, AboutActivity.class));
+                return true;
+            /*case R.id.help:
+//                showHelp();
+                return true;*/
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        /*//noinspection SimplifiableIfStatement
+        if (id == R.id.action_about) {
             return true;
         }
-
-        return super.onOptionsItemSelected(item);
+        if (id == R.id.action_help){
+            return true;
+        }
+        return super.onOptionsItemSelected(item);*/
     }
 
     //Method to start the service
